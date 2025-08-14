@@ -90,8 +90,22 @@ void load_canvas(const char *filename) {
 }
 
 void show_help() {
-    // 清屏并显示帮助信息
-    clear();
+    // 保存当前画布内容
+    chtype (*canvas_backup)[COLS] = malloc((LINES - 2) * sizeof(chtype[COLS]));
+    if (canvas_backup == NULL) {
+        // 内存分配失败，使用原来的清屏方式
+        clear();
+    } else {
+        // 保存画布内容（不包括边框）
+        for (int y = 1; y < LINES - 2; y++) {
+            for (int x = 1; x < COLS - 1; x++) {
+                canvas_backup[y-1][x-1] = mvinch(y, x);
+            }
+        }
+        
+        // 清屏并显示帮助信息
+        clear();
+    }
     
     // 显示标题
     move(1, (COLS - 20) / 2);
@@ -169,9 +183,24 @@ void show_help() {
     // 等待用户按键
     getch();
     
-    // 重新绘制界面
-    clear();
-    draw_border();
+    // 恢复画布内容
+    if (canvas_backup != NULL) {
+        clear();
+        draw_border();
+        
+        // 恢复画布内容
+        for (int y = 1; y < LINES - 2; y++) {
+            for (int x = 1; x < COLS - 1; x++) {
+                mvaddch(y, x, canvas_backup[y-1][x-1]);
+            }
+        }
+        
+        free(canvas_backup);
+    } else {
+        // 如果内存分配失败，使用原来的清屏方式
+        clear();
+        draw_border();
+    }
 }
 
 void parse_and_exec_cmd(const char *cmd, Cursor *cursor, int color, char symbol)
