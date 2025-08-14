@@ -8,7 +8,7 @@
 #include "utils.h"
 
 void save_canvas(const char *filename) {
-    FILE *file = fopen(filename, "w");
+    FILE *file = fopen(filename, "wb");  // 以二进制模式打开文件
     if (file == NULL) {
         // 显示错误信息
         move(LINES - 1, 0);
@@ -21,9 +21,11 @@ void save_canvas(const char *filename) {
     // 保存画布内容（不包括边框）
     for (int y = 1; y < LINES - 2; y++) {
         for (int x = 1; x < COLS - 1; x++) {
-            char ch = mvinch(y, x) & A_CHARTEXT;
-            fputc(ch, file);
+            chtype ch = mvinch(y, x);  // 获取完整的字符和属性信息
+            // 保存chtype值（包含字符和颜色属性）
+            fwrite(&ch, sizeof(chtype), 1, file);
         }
+        // 用换行符分隔行
         fputc('\n', file);
     }
     
@@ -40,7 +42,7 @@ void save_canvas(const char *filename) {
 }
 
 void load_canvas(const char *filename) {
-    FILE *file = fopen(filename, "r");
+    FILE *file = fopen(filename, "rb");  // 以二进制模式打开文件
     if (file == NULL) {
         // 显示错误信息
         move(LINES - 1, 0);
@@ -57,21 +59,25 @@ void load_canvas(const char *filename) {
         }
     }
     
-    // 从文件加载内容
-    int y = 0;
-    int x = 0;
-    int ch;
-    
-    while ((ch = fgetc(file)) != EOF) {
-        if (ch == '\n') {
-            y++;
-            x = 0;
-        } else {
-            if (y < LINES - 3 && x < COLS - 2) {
-                mvaddch(y + 1, x + 1, ch);
-                x++;
+    // 从文件加载内容（包含颜色信息）
+    for (int y = 0; y < LINES - 3; y++) {
+        for (int x = 0; x < COLS - 2; x++) {
+            chtype ch;
+            // 读取chtype值（包含字符和颜色属性）
+            if (fread(&ch, sizeof(chtype), 1, file) != 1) {
+                fclose(file);
+                move(LINES - 1, 0);
+                clrtoeol();
+                mvprintw(LINES - 1, 0, "Error: File format incorrect");
+                refresh();
+                return;
             }
+            
+            // 使用mvaddch直接设置字符和颜色属性
+            mvaddch(y + 1, x + 1, ch);
         }
+        // 跳过换行符
+        fgetc(file);
     }
     
     fclose(file);
