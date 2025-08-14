@@ -1,4 +1,4 @@
-__注意：此项目为__[ttd](https://github.com/GuoYang17/ttd)__的改版，在原基础上加入了帮助、保存和加载功能。原作者GitHub名:GuoYang17__
+__注意：此项目为__[ttd](https://github.com/GuYang17/ttd)__的改版，在原基础上加入了帮助、保存和加载功能。原作者GitHub名:GuYang17__
 ====================
 1. ttd 新
 2. ttd (new)
